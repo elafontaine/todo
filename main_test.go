@@ -26,6 +26,16 @@ func TestCanLoadTaskListFile(t *testing.T) {
 				{Description: "task 2", completed: true, hidden: true},
 			},
 		},
+		{
+			name:    "3 tasks",
+			content: "task 1,n,n\ntask 2,y,y\ntask 3,n,n\ntask 4,y,y",
+			expectedResult: []Task{
+				{Description: "task 1", completed: false, hidden: false},
+				{Description: "task 2", completed: true, hidden: true},
+				{Description: "task 3", completed: false, hidden: false},
+				{Description: "task 4", completed: true, hidden: true},
+			},
+		},
 	}
 
 	for _, tt := range tests {
