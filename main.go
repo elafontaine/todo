@@ -1,12 +1,10 @@
 package main
 
 import (
-	"encoding/csv"
 	"errors"
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 )
 
 type Task struct {
@@ -29,12 +27,11 @@ const tpl = `
 
 const fileName = "tasks.csv"
 
-
 func main() {
-	http.HandleFunc("/",getRoot)
+	http.HandleFunc("/", getRoot)
 	http.HandleFunc("/add", add)
 
-	err:=  http.ListenAndServe(":5000", nil)
+	err := http.ListenAndServe(":5000", nil)
 	if errors.Is(err, http.ErrServerClosed) {
 		fmt.Printf("server closed\n")
 	} else if err != nil {
@@ -44,27 +41,27 @@ func main() {
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
-/*	fmt.Println("Got / from ", r.RemoteAddr)
-	// open file containing a list of tasks
-	fh, err := os.Open(x)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-	}
-	defer fh.Close()
+	/*	fmt.Println("Got / from ", r.RemoteAddr)
+		// open file containing a list of tasks
+		fh, err := os.Open(x)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err.Error())
+		}
+		defer fh.Close()
 
-	csvReader := csv.NewReader(fh)
-	records, err := csvReader.ReadAll()
-	if err != nil {
-		log.Fatal("Unable to parse file as CSV for "+ fileName, err)
-	}
+		csvReader := csv.NewReader(fh)
+		records, err := csvReader.ReadAll()
+		if err != nil {
+			log.Fatal("Unable to parse file as CSV for "+ fileName, err)
+		}
 
-	var tasks []Task
+		var tasks []Task
 
-	
-	_, err = io.WriteString(w, tpl)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-	}*/
+
+		_, err = io.WriteString(w, tpl)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err.Error())
+		}*/
 }
 
 func add(w http.ResponseWriter, r *http.Request) {
@@ -72,30 +69,4 @@ func add(w http.ResponseWriter, r *http.Request) {
 		r.PostForm.Get("Description")
 	}
 	getRoot(w, r)
-}
-
-func convertContentToTasks(content string) (tasks []Task, err error) {
-	r := csv.NewReader(strings.NewReader(content))
-	records, err := r.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("Couldn't read (%w) from content %s", err, content)
-	}
-	tasks = []Task{}
-	for _, record := range records {
-		task := convertToTask(record)
-		tasks = append(tasks, task)
-	}
-	return tasks, nil
-}
-
-func convertToTask(record []string) Task {
-	task := Task{Description: record[0], completed: parseBool(record[1]), hidden: parseBool(record[2])}
-	return task
-}
-
-func parseBool(s string) bool {
-	if s == "y" || s == "Y" {
-		return true
-	}
-	return false
 }
