@@ -1,10 +1,11 @@
 package main
 
 import (
+	"os"
 	"testing"
 )
 
-func TestCanLoadTaskListFile(t *testing.T) {
+func TestCanLoadTaskListFromContent(t *testing.T) {
 	tests := []struct {
 		name           string
 		content        string
@@ -41,7 +42,7 @@ func TestCanLoadTaskListFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			content := tt.content
-			tasks, err := convertContentToTasks(content)
+			tasks, err := convertContentToTasks(content) // testee
 			if err != nil {
 				t.Errorf("Couldn't read from %s", content)
 			}
@@ -50,6 +51,24 @@ func TestCanLoadTaskListFile(t *testing.T) {
 			}
 		})
 
+	}
+}
+
+func TestCreateTaskFileIfDoesNotExist(t *testing.T) {
+	fileName := "random-filename.test"
+	for i := 0; i < 2; i++ {
+		tasks, err := getTasks(fileName) //testee
+		if err != nil {
+			t.Error("Something very wrong happened")
+		}
+		if len(tasks) != 0 {
+			t.Error("Content of the file isn't empty")
+		}
+		
+	}
+	err := os.Remove(fileName)
+	if err != nil {
+		t.Errorf("Couldn't delete test file : %v", err)
 	}
 }
 
