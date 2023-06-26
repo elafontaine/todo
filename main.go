@@ -31,18 +31,17 @@ var todo_template *template.Template
 
 const fileName = "tasks.csv"
 
-var tasks []Task = []Task{}
-
+var tasks []Task = []Task{}  //Global list with mutex (shared across requests)
 
 func main() {
 	var err error // required for the todo_template variable
 	todo_template, err = template.New("root").Parse(tpl)
 	if err != nil {
-		log.Fatalf("Couldn't prepare template, something is very wrong : %v", err)
+		panic(fmt.Sprintf("Couldn't prepare template, something is very wrong : %v", err))
 	}
-	tasks = getTasks(fileName)
+	tasks,err = getTasksFromFile(fileName)
 	if err != nil {
-		log.Fatalf("Couldn't prepare task list from file that exist: %v", err)
+		panic(err)
 	}
 
 	http.HandleFunc("/", getRoot)
@@ -52,8 +51,7 @@ func main() {
 	if errors.Is(err, http.ErrServerClosed) {
 		fmt.Printf("server closed\n")
 	} else if err != nil {
-		fmt.Printf("error starting server: %s\n", err)
-		os.Exit(1)
+		panic(fmt.Sprintf("error starting server: %v\n", err))
 	}
 }
 
@@ -66,31 +64,26 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetTasks() ([]Task) {
-	return tasks
-}
-
-func getTasks(fileName string) ([]Task) {
+func getTasksFromFile(fileName string) ([]Task, error) {
 	file, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	defer file.Close()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		panic(err)
+		return nil, err
 	}
 
 	bytes_content, err := os.ReadFile(fileName)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
-		panic(err)
+		return nil, err
 	}
 
 	content := string(bytes_content)
 	tasks, err := convertContentToTasks(content)
 	if err != nil {
 		log.Panicln("Unable to parse file as CSV for "+fileName, err)
-		panic(err)
+		return nil, err
 	}
-	return tasks
+	return tasks, nil
 }
 
 func add(w http.ResponseWriter, r *http.Request) {
