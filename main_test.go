@@ -1,6 +1,9 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
+	"net/http/httptest"
 	"os"
 	"testing"
 )
@@ -73,6 +76,24 @@ func testGetTasksFromFile(fileName string, t *testing.T) {
 	if len(tasks) != 0 {
 		t.Error("Content of the file isn't empty!")
 	}
+}
+
+func TestCanAddTaskToTasksList(t *testing.T){
+	description := "New task to add"
+	json_content := map[string]interface{} {
+		"description": description,
+	}
+	body, _ := json.Marshal(json_content)
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("POST","http://example.com/add",bytes.NewReader(body))
+	
+	list, _ := add(w,r) //testee
+
+	println(list)
+	if !Equal(list, []Task{{Description: description, completed: false, hidden: false}}){
+		t.Error("Task list weren't equal")
+	}
+
 }
 
 func Equal(a, b []Task) bool {
