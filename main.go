@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"context"
 	"errors"
 	"fmt"
 	"html/template"
@@ -16,12 +16,11 @@ type Task struct {
 	Description string
 }
 
-
 var todo_template *template.Template
 
 const fileName = "tasks.csv"
 
-var tasks []Task = []Task{}  //Global list with mutex (shared across requests)
+var tasks []Task = []Task{}
 
 func main() {
 	var err error // required for the todo_template variable
@@ -29,7 +28,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("Couldn't prepare template, something is very wrong : %v", err))
 	}
-	tasks,err = getTasksFromFile(fileName)
+	tasks, err = getTasksFromFile(fileName)
 	if err != nil {
 		panic(err)
 	}
@@ -76,16 +75,34 @@ func getTasksFromFile(fileName string) ([]Task, error) {
 	return tasks, nil
 }
 
-func add(w http.ResponseWriter, r *http.Request) (tasks []Task, err error)  {
-	var description string
-	if r.Method == "POST" {
-		var m map[string]interface{}
-		err = json.NewDecoder(r.Body).Decode(&m)
-		if err != nil {
-			return tasks, err
-		}
-		description = fmt.Sprint(m["description"])
+func addFormFunc(tasks *[]Task) func(w http.ResponseWriter, r *http.Request) {
+	return func (w http.ResponseWriter, r *http.Request)  {
+		ctx := r.Context()
+		ctx = context.WithValue(ctx,"tasks", tasks)
+		addForm(w, r.WithContext(ctx))
 	}
-	tasks = append(tasks, Task{Description: description, completed: false, hidden: false})
+}
+func addForm(w http.ResponseWriter, r *http.Request) {
+	_, err := addNewTaskToAppList(r)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)	
+		return
+	}
+	http.Redirect(w,r,"/", http.StatusFound)
+}
+
+func addNewTaskToAppList(r *http.Request) (tasks []Task, err error) {
+	if r.Method == "POST" {
+		myvar := r.Context().Value("tasks").(*[]Task)
+		tasks = append(*myvar,
+			Task{
+				Description: r.PostFormValue("description"),
+				completed:   false,
+				hidden:      false,
+			},
+		)
+		*myvar = tasks
+
+	}
 	return tasks, nil
 }

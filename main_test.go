@@ -1,10 +1,13 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
+	"context"
+	"fmt"
+	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -80,20 +83,39 @@ func testGetTasksFromFile(fileName string, t *testing.T) {
 
 func TestCanAddTaskToTasksList(t *testing.T){
 	description := "New task to add"
-	json_content := map[string]interface{} {
-		"description": description,
-	}
-	body, _ := json.Marshal(json_content)
-	w := httptest.NewRecorder()
-	r := httptest.NewRequest("POST","http://example.com/add",bytes.NewReader(body))
-	
-	list, _ := add(w,r) //testee
+	formContent := "description="+ description
+	r := httptest.NewRequest("POST","http://example.com/add",strings.NewReader(formContent))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	tasks := []Task{}
+	ctx := context.WithValue(r.Context(),"tasks",&tasks)
+	r = r.WithContext(ctx)
+	output_tasks,_ := addNewTaskToAppList(r) //testee
 
-	println(list)
-	if !Equal(list, []Task{{Description: description, completed: false, hidden: false}}){
+	fmt.Printf("Tasks : %v", output_tasks)
+	if !Equal(tasks, []Task{{Description: description, completed: false, hidden: false}}){
 		t.Error("Task list weren't equal")
 	}
+}
 
+
+func TestCanAddFormReturnALocationToGetRoot(t *testing.T) {
+	description := "New task to add"
+	params := url.Values{}
+	params.Add("description", description)
+	tasks := []Task{}
+
+	r := httptest.NewRequest("POST","http://example.com/add",strings.NewReader(params.Encode()))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	w := httptest.NewRecorder()
+	
+	addFormFunc(&tasks)(w,r) //testee
+
+	if w.Result().StatusCode != http.StatusFound {
+		t.Error("Did not receive expected redirect to root")
+	}
+	if w.Result().Header["Location"][0] != "/" {
+		t.Error("Did not receive the location header to point to /")
+	}
 }
 
 func Equal(a, b []Task) bool {
