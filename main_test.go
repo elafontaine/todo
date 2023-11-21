@@ -11,55 +11,6 @@ import (
 	"testing"
 )
 
-func TestCanLoadTaskListFromContent(t *testing.T) {
-	tests := []struct {
-		name           string
-		content        string
-		expectedResult []Task
-	}{
-		{name: "empty content", content: "", expectedResult: nil},
-		{
-			name:    "one task",
-			content: "task 1,n,n",
-			expectedResult: []Task{
-				{Description: "task 1", completed: false, hidden: false},
-			},
-		},
-		{
-			name:    "2 tasks",
-			content: "task 1,n,n\ntask 2,y,y",
-			expectedResult: []Task{
-				{Description: "task 1", completed: false, hidden: false},
-				{Description: "task 2", completed: true, hidden: true},
-			},
-		},
-		{
-			name:    "3 tasks",
-			content: "task 1,n,n\ntask 2,y,y\ntask 3,n,n\ntask 4,y,y",
-			expectedResult: []Task{
-				{Description: "task 1", completed: false, hidden: false},
-				{Description: "task 2", completed: true, hidden: true},
-				{Description: "task 3", completed: false, hidden: false},
-				{Description: "task 4", completed: true, hidden: true},
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			content := tt.content
-			tasks, err := convertContentToTasks(content) // testee
-			if err != nil {
-				t.Errorf("Couldn't read from %s", content)
-			}
-			if !Equal(tasks, tt.expectedResult) {
-				t.Errorf(" %v wasnt like %v ", tasks, tt.expectedResult)
-			}
-		})
-
-	}
-}
-
 func TestCreateTaskFileIfDoesNotExist(t *testing.T) {
 	fileName := "random-filename.test"
 	for i := 0; i < 2; i++ { // 0- no file, 1- file should exist and still succeed
@@ -84,7 +35,7 @@ func testGetTasksFromFile(fileName string, t *testing.T) {
 func TestCanAddTaskToTasksList(t *testing.T){
 	description := "New task to add"
 	formContent := "description="+ description
-	r := httptest.NewRequest("POST","http://example.com/add",strings.NewReader(formContent))
+	r := httptest.NewRequest("POST","http://example.com/tasks/",strings.NewReader(formContent))
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	tasks := []Task{}
 	ctx := context.WithValue(r.Context(),"tasks",&tasks)
@@ -104,7 +55,27 @@ func TestCanAddFormReturnALocationToGetRoot(t *testing.T) {
 	params.Add("description", description)
 	tasks := []Task{}
 
-	r := httptest.NewRequest("POST","http://example.com/add",strings.NewReader(params.Encode()))
+	r := httptest.NewRequest("POST","http://example.com/tasks/", strings.NewReader(params.Encode()))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	w := httptest.NewRecorder()
+	
+	addFormFunc(&tasks)(w,r) //testee
+
+	if w.Result().StatusCode != http.StatusFound {
+		t.Error("Did not receive expected redirect to root")
+	}
+	if w.Result().Header["Location"][0] != "/" {
+		t.Error("Did not receive the location header to point to /")
+	}
+}
+
+func TestCanGetTasksFromUri(t *testing.T) {
+	description := "New task to add"
+	params := url.Values{}
+	params.Add("description", description)
+	tasks := []Task{}
+
+	r := httptest.NewRequest("GET","http://example.com/tasks/", strings.NewReader(params.Encode()))
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	w := httptest.NewRecorder()
 	

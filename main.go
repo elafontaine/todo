@@ -53,24 +53,23 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getTasksFromFile(fileName string) ([]Task, error) {
+func getTasksFromFile(fileName string) ( tasks []Task, err error) {
 	file, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return nil, err
+		return
 	}
 	defer file.Close()
 
 	bytes_content, err := os.ReadFile(fileName)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		return nil, err
+		return
 	}
 
 	content := string(bytes_content)
-	tasks, err := convertContentToTasks(content)
+	tasks, err = convertContentToTasks(content)
 	if err != nil {
 		log.Panicln("Unable to parse file as CSV for "+fileName, err)
-		return nil, err
+		return
 	}
 	return tasks, nil
 }
@@ -92,17 +91,16 @@ func addForm(w http.ResponseWriter, r *http.Request) {
 }
 
 func addNewTaskToAppList(r *http.Request) (tasks []Task, err error) {
-	if r.Method == "POST" {
-		myvar := r.Context().Value("tasks").(*[]Task)
-		tasks = append(*myvar,
-			Task{
-				Description: r.PostFormValue("description"),
-				completed:   false,
-				hidden:      false,
-			},
-		)
-		*myvar = tasks
-
-	}
+	
+	myvar := r.Context().Value("tasks").(*[]Task)
+	*myvar = append(*myvar,
+		Task{
+			Description: r.PostFormValue("description"),
+			completed:   false,
+			hidden:      false,
+		},
+	)
+	// https://stackoverflow.com/a/38105687/2184575
+	
 	return tasks, nil
 }
