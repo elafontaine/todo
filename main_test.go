@@ -32,7 +32,22 @@ func TestCanAddFormReturnALocationToGetRoot(t *testing.T) {
 }
 
 func TestAddFormHasWrongInput(t *testing.T){
-	
+	params := url.Values{}
+	params.Add("somethingwrong", "oh well")
+	tasks := []Task{}
+
+	r := httptest.NewRequest("POST", "http://example.com/tasks/", strings.NewReader(params.Encode()))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	w := httptest.NewRecorder()
+
+	addFormFunc(&tasks)(w, r) //testee
+
+	if !Equal(tasks, []Task{}) {
+		t.Error("Task list weren't equal")
+	}
+	if w.Result().StatusCode != http.StatusFound {
+		t.Error("Did not receive expected redirect to root")
+	}
 }
 
 func TestCanGetTasksFromUri(t *testing.T) {

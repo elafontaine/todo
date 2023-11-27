@@ -53,7 +53,7 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getTasksFromFile(fileName string) ( tasks []Task, err error) {
+func getTasksFromFile(fileName string) (tasks []Task, err error) {
 	file, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return
@@ -75,32 +75,27 @@ func getTasksFromFile(fileName string) ( tasks []Task, err error) {
 }
 
 func addFormFunc(tasks *[]Task) func(w http.ResponseWriter, r *http.Request) {
-	return func (w http.ResponseWriter, r *http.Request)  {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		ctx = context.WithValue(ctx,"tasks", tasks)
+		ctx = context.WithValue(ctx, "tasks", tasks)
 		addForm(w, r.WithContext(ctx))
 	}
 }
 func addForm(w http.ResponseWriter, r *http.Request) {
-	_, err := addNewTaskToAppList(r)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)	
-		return
-	}
-	http.Redirect(w,r,"/", http.StatusFound)
+	addNewTaskToAppList(r)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func addNewTaskToAppList(r *http.Request) (tasks []Task, err error) {
-	
-	myvar := r.Context().Value("tasks").(*[]Task)
-	*myvar = append(*myvar,
-		Task{
-			Description: r.PostFormValue("description"),
-			completed:   false,
-			hidden:      false,
-		},
-	)
-	// https://stackoverflow.com/a/38105687/2184575
-	
-	return tasks, nil
+func addNewTaskToAppList(r *http.Request) {
+	if r.PostFormValue("description") != "" {
+		myvar := r.Context().Value("tasks").(*[]Task)
+		*myvar = append(*myvar,
+			Task{
+				Description: r.PostFormValue("description"),
+				completed:   false,
+				hidden:      false,
+			},
+		)
+		// https://stackoverflow.com/a/38105687/2184575
+	}
 }
