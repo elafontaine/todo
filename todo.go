@@ -3,8 +3,31 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
+	"log"
+	"os"
 	"strings"
 )
+
+func getTasksFromFile(fileName string) (tasks []Task, err error) {
+	file, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	bytes_content, err := os.ReadFile(fileName)
+	if err != nil {
+		return
+	}
+
+	content := string(bytes_content)
+	tasks, err = convertContentToTasks(content)
+	if err != nil {
+		log.Panicln("Unable to parse file as CSV for "+fileName, err)
+		return
+	}
+	return tasks, nil
+}
 
 func convertContentToTasks(content string) (tasks []Task, err error) {
 	r := csv.NewReader(strings.NewReader(content))

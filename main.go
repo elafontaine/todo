@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"os"
 )
@@ -33,8 +32,11 @@ func main() {
 		panic(err)
 	}
 
+	asset_directory := http.Dir("assets")
+	asset_fileserver := http.FileServer(asset_directory)
+	http.Handle("/assets/", http.StripPrefix("/assets/",asset_fileserver))
 	http.HandleFunc("/", getRoot)
-	// http.HandleFunc("/add", add)
+	http.HandleFunc("/add", addFormFunc(&tasks))
 
 	err = http.ListenAndServe(":5000", nil)
 	if errors.Is(err, http.ErrServerClosed) {
@@ -51,27 +53,6 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 	}
-}
-
-func getTasksFromFile(fileName string) (tasks []Task, err error) {
-	file, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return
-	}
-	defer file.Close()
-
-	bytes_content, err := os.ReadFile(fileName)
-	if err != nil {
-		return
-	}
-
-	content := string(bytes_content)
-	tasks, err = convertContentToTasks(content)
-	if err != nil {
-		log.Panicln("Unable to parse file as CSV for "+fileName, err)
-		return
-	}
-	return tasks, nil
 }
 
 func addFormFunc(tasks *[]Task) func(w http.ResponseWriter, r *http.Request) {

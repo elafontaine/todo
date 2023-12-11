@@ -1,0 +1,68 @@
+.form-outline {
+  position: relative;
+  width: 100%;
+}
+
+.form-outline .form-control {
+  min-height: auto;
+  padding-top: .32rem;
+  padding-bottom: .32rem;
+  padding-left: .75rem;
+  padding-right: .75rem;
+  border: 0;
+  background: rgba(0,0,0,0);
+  transition: all .2s linear;
+}
+
+input[type=checkbox]:checked + input[type=text].strikethrough {
+  text-decoration: line-through;
+  color: var(--bs-gray);
+  text-decoration-color: var(--bs-gray);
+}
+
+input[type=checkbox]:checked + span.strikethrough {
+  text-decoration: line-through;
+  color: var(--bs-gray);
+  text-decoration-color: var(--bs-gray);
+}
+
+.form-outline .form-control ~ .form-label {
+  position: absolute;
+  top: 0;
+  max-width: 90%;
+  white-space: nowrap;
+  white-space-collapse: collapse;
+  text-wrap: nowrap;
+  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  text-overflow: ellipsis;
+  left: 0.75rem;
+  padding-top: 0.7rem;
+  pointer-events: none;
+  transform-origin: 0 0;
+  transition: all .2s ease-out;
+  transition-behavior: normal;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-out;
+  transition-delay: 0s;
+  transition-property: all;
+  color: var(--mdb-form-control-label-color);
+  margin-bottom: 0;
+}
+
+label {
+  display: inline-block;
+  cursor: default;
+}
+
+.form-outline .form-control:focus ~ .form-notch .form-notch-middle, .form-outline .form-control.active ~ .form-notch .form-notch-middle {
+  border-right: none;
+  border-left: none;
+  border-top: 1px solid rgba(0,0,0,0);
+}
+
+.form-outline .form-control:focus ~ .form-label, .form-outline .form-control.active ~ .form-label {
+  transform: translateY(-1rem) translateY(0.1rem) scale(0.8);
+}
+
