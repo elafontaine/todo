@@ -57,6 +57,7 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 
 func addFormFunc(tasks *[]Task) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Got /add from ", r.RemoteAddr)
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, "tasks", tasks)
 		addForm(w, r.WithContext(ctx))

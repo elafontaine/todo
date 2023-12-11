@@ -20,8 +20,12 @@ const tpl = `
                         <div class="card" style="border-radius: 15px;">
                             <div class="card-body p-5">
                                 <h6 class="mb-3">Todo lists</h6>
-                                <form class="d-flex justify-content-center align-items-center mb-4">
-                                    <div class="flex-fill form-outline"><input id="form3" class="form-control form-control-lg form-control" type="text" /><label class="form-label form-label" for="form3">What do you need to do today?</label></div><button class="btn btn-primary btn-lg ms-2" type="submit">Add</button>
+                                <form class="d-flex justify-content-center align-items-center mb-4" action="/add" method="POST">
+                                <div class="flex-fill form-outline">
+                                    <textarea name="description" id="description" class="form-control form-control-lg" type="text" required placeholder></textarea>
+                                    <label class="form-label" for="description">What do you need to do today?</label>
+                                </div>
+                                    <button class="btn btn-primary btn-lg ms-2" type="submit">Add</button>
                                 </form>
                                 <ul class="list-group border-0 mb-0">
                                     {{range $i, $a := .}}
